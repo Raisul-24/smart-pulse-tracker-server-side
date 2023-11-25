@@ -97,6 +97,12 @@ app.get('/trainers', async (req, res) => {
    const result = await trainerCollection.find().toArray();
    res.send(result);
 });
+// post trainer
+app.post('/trainers', async (req, res) =>{
+   const trainer = req.body;
+   const result = await trainerCollection.insertOne(trainer);
+   res.send(result)
+})
 // specific trainer
 app.get('/trainers/:id', async (req, res) => {
    const id = req.params.id;

@@ -72,6 +72,7 @@ dbConnect()
 const userCollection = client.db('SmartPulse-Fitness-Tracker').collection('users');
 const featureCollection = client.db('SmartPulse-Fitness-Tracker').collection('features');
 const trainerCollection = client.db('SmartPulse-Fitness-Tracker').collection('trainers');
+const trainerBookCollection = client.db('SmartPulse-Fitness-Tracker').collection('bookings');
 
 
 app.post('/users', async (req, res) => {
@@ -102,13 +103,19 @@ app.post('/trainers', async (req, res) =>{
    const trainer = req.body;
    const result = await trainerCollection.insertOne(trainer);
    res.send(result)
-})
+});
 // specific trainer
 app.get('/trainers/:id', async (req, res) => {
    const id = req.params.id;
    // console.log(id)
    const query = { _id: new ObjectId(id) }
    const result = await trainerCollection.findOne(query);
+   res.send(result);
+});
+// user book trainer
+app.post('/bookings', async (req, res) =>{
+   const bookInfo = req.body;
+   const result = await trainerBookCollection.insertOne(bookInfo);
    res.send(result);
 })
 

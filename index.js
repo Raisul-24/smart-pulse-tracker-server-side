@@ -73,6 +73,7 @@ const userCollection = client.db('SmartPulse-Fitness-Tracker').collection('users
 const featureCollection = client.db('SmartPulse-Fitness-Tracker').collection('features');
 const trainerCollection = client.db('SmartPulse-Fitness-Tracker').collection('trainers');
 const trainerBookCollection = client.db('SmartPulse-Fitness-Tracker').collection('bookings');
+const subscribersCollection = client.db('SmartPulse-Fitness-Tracker').collection('subscribers');
 
 
 app.post('/users', async (req, res) => {
@@ -117,6 +118,12 @@ app.post('/bookings', async (req, res) =>{
    const bookInfo = req.body;
    const result = await trainerBookCollection.insertOne(bookInfo);
    res.send(result);
+});
+// post subscriber info
+app.post('/subscribers', async (req, res) =>{
+   const subscriber = req.body;
+   const result = await subscribersCollection.insertOne(subscriber);
+   res.send(result)
 })
 
 

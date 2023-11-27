@@ -74,6 +74,7 @@ const featureCollection = client.db('SmartPulse-Fitness-Tracker').collection('fe
 const trainerCollection = client.db('SmartPulse-Fitness-Tracker').collection('trainers');
 const trainerBookCollection = client.db('SmartPulse-Fitness-Tracker').collection('bookings');
 const subscribersCollection = client.db('SmartPulse-Fitness-Tracker').collection('subscribers');
+const postCollection = client.db('SmartPulse-Fitness-Tracker').collection('forum');
 
 
 app.post('/users', async (req, res) => {
@@ -100,7 +101,7 @@ app.get('/trainers', async (req, res) => {
    res.send(result);
 });
 // post trainer
-app.post('/trainers', async (req, res) =>{
+app.post('/trainers', async (req, res) => {
    const trainer = req.body;
    const result = await trainerCollection.insertOne(trainer);
    res.send(result)
@@ -114,24 +115,41 @@ app.get('/trainers/:id', async (req, res) => {
    res.send(result);
 });
 // user book trainer
-app.post('/bookings', async (req, res) =>{
+app.post('/bookings', async (req, res) => {
    const bookInfo = req.body;
    const result = await trainerBookCollection.insertOne(bookInfo);
    res.send(result);
 });
 // post subscriber info
-app.post('/subscribers', async (req, res) =>{
+app.post('/subscribers', async (req, res) => {
    const subscriber = req.body;
    const result = await subscribersCollection.insertOne(subscriber);
    res.send(result)
+});
+app.get('/forum', async (req, res) => {
+   const page = parseInt(req.query.page) || 1;
+   const perPage = 6;
+   const totalPosts = postCollection.countDocuments();
+   // console.log(totalPosts)
+   const totalPages = Math.ceil(totalPosts / perPage);
+   // console.log(totalPages)
+
+   const posts = await postCollection.find().skip((page - 1) * perPage).limit(perPage).toArray();
+
+   res.send(
+      {
+      posts,
+      currentPage: page,
+      totalPages,
+   }
+   );
 })
 
+   app.get('/', (req, res) => {
+      res.send('Fitness-Tracker is running!!');
+   })
 
-app.get('/', (req, res) => {
-   res.send('Fitness-Tracker is running!!');
-})
 
-
-app.listen(port, () => {
-   console.log(`Server is running on port ${port}`)
-})
+   app.listen(port, () => {
+      console.log(`Server is running on port ${port}`)
+   })

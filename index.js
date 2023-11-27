@@ -72,10 +72,17 @@ dbConnect()
 const userCollection = client.db('SmartPulse-Fitness-Tracker').collection('users');
 const featureCollection = client.db('SmartPulse-Fitness-Tracker').collection('features');
 const trainerCollection = client.db('SmartPulse-Fitness-Tracker').collection('trainers');
+const appliedTrainerCollection = client.db('SmartPulse-Fitness-Tracker').collection('applyTrainers');
 const trainerBookCollection = client.db('SmartPulse-Fitness-Tracker').collection('bookings');
 const subscribersCollection = client.db('SmartPulse-Fitness-Tracker').collection('subscribers');
 const postCollection = client.db('SmartPulse-Fitness-Tracker').collection('forum');
 
+
+// user related api
+app.get('/users', async (req, res) => {
+   const result = await userCollection.find().toArray();
+   res.send(result)
+});
 
 app.post('/users', async (req, res) => {
    const user = req.body;
@@ -89,6 +96,25 @@ app.post('/users', async (req, res) => {
 
    const result = await userCollection.insertOne(user);
    res.send(result)
+});
+// make admin
+app.patch('/users/admin/:id', async (req, res) => {
+   const id = req.params.id;
+   const filter = { _id: new ObjectId(id) };
+   const updatedDoc = {
+      $set: {
+         role: 'admin'
+      }
+   }
+   const result = await userCollection.updateOne(filter, updatedDoc);
+   res.send(result);
+});
+// delete user
+app.delete('/users/:id', async (req, res) => {
+   const id = req.params.id;
+   const query = { _id: new ObjectId(id) }
+   const result = await userCollection.deleteOne(query);
+   res.send(result);
 });
 // get features
 app.get('/features', async (req, res) => {
@@ -104,7 +130,13 @@ app.get('/trainers', async (req, res) => {
 app.post('/trainers', async (req, res) => {
    const trainer = req.body;
    const result = await trainerCollection.insertOne(trainer);
-   res.send(result)
+   res.send(result);
+});
+// post applied trainer
+app.post('/applyTrainers', async (req, res) => {
+   const trainer = req.body;
+   const result = await appliedTrainerCollection.insertOne(trainer);
+   res.send(result);
 });
 // specific trainer
 app.get('/trainers/:id', async (req, res) => {
@@ -120,6 +152,11 @@ app.post('/bookings', async (req, res) => {
    const result = await trainerBookCollection.insertOne(bookInfo);
    res.send(result);
 });
+// get subscriber info admin
+app.get('/subscribers', async (req, res) => {
+   const result = await subscribersCollection.find().toArray();
+   res.send(result)
+});
 // post subscriber info
 app.post('/subscribers', async (req, res) => {
    const subscriber = req.body;
@@ -133,23 +170,33 @@ app.get('/forum', async (req, res) => {
    // console.log(totalPosts)
    const totalPages = Math.ceil(totalPosts / perPage);
    // console.log(totalPages)
-
    const posts = await postCollection.find().skip((page - 1) * perPage).limit(perPage).toArray();
-
-   res.send(
-      {
+   res.send({
       posts,
       currentPage: page,
-      totalPages,
+      totalPages
+   });
+});
+// patch forum voting no
+app.patch('/forum/:id/vote', async (req, res) => {
+   const id = req.params.id;
+   const filter = { _id: new ObjectId(id) }
+   const { type } = req.body;
+   if (type === 'upvote') {
+      await postCollection.updateOne(filter, { $inc: { upvotes: 1 } });
+   } else if (type === 'downvote') {
+      await postCollection.updateOne(filter, { $inc: { downvotes: 1 } });
    }
-   );
+   const result = await postCollection.findOne(filter);
+   res.send(result);
+});
+
+
+app.get('/', (req, res) => {
+   res.send('Fitness-Tracker is running!!');
 })
 
-   app.get('/', (req, res) => {
-      res.send('Fitness-Tracker is running!!');
-   })
 
-
-   app.listen(port, () => {
-      console.log(`Server is running on port ${port}`)
-   })
+app.listen(port, () => {
+   console.log(`Server is running on port ${port}`)
+})

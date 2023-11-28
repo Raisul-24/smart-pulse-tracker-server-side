@@ -96,14 +96,22 @@ app.get('/users',verifyToken, verifyAdmin, async (req, res) => {
    const result = await userCollection.find().toArray();
    res.send(result);
 });
-
+// specific email holder user data from db
+app.get('/users/:email', verifyToken, async (req, res) => {
+   const query = { email: req.params.email }
+   console.log(query)
+   if (req.params.email !== req.decoded.email) {
+      return res.status(403).send({ message: 'forbidden access' });
+   }
+   const result = await userCollection.find(query).toArray();
+   res.send(result);
+});
 // admin verify
 app.get('/users/admin/:email', verifyToken, async (req, res) => {
    const email = req.params.email;
    if (email !== req.decoded.email) {
       return res.status(403).send({ message: 'unauthorized access' })
    }
-
    const query = { email: email }
    const user = await userCollection.findOne(query);
    let admin = false;
@@ -111,6 +119,20 @@ app.get('/users/admin/:email', verifyToken, async (req, res) => {
       admin = user?.role === 'admin';
    }
    res.send({ admin })
+});
+// trainer verify
+app.get('/users/trainer/:email', verifyToken, async (req, res) => {
+   const email = req.params.email;
+   if (email !== req.decoded.email) {
+      return res.status(403).send({ message: 'unauthorized access' })
+   }
+   const query = { email: email }
+   const user = await userCollection.findOne(query);
+   let trainer = false;
+   if (user) {
+      trainer = user?.role === 'trainer';
+   }
+   res.send({ trainer });
 });
 
 
@@ -286,7 +308,7 @@ app.post("/create-payment-intent", async (req, res) => {
    });
  });
 // specific email holder history
-app.get('/payments/:email', async (req, res) => {
+app.get('/payments/:email', verifyToken, async (req, res) => {
    const query = { email: req.params.email }
    if (req.params.email !== req.decoded.email) {
       return res.status(403).send({ message: 'forbidden access' });
@@ -301,6 +323,18 @@ app.post('/payments', async (req, res) => {
    console.log('payment info', payment);
    res.send({ paymentResult });
 });
+// stats or analytics
+app.get('/admin-stats', async (req, res) => {
+   const users = await userCollection.estimatedDocumentCount();
+   const subscribers = await subscribersCollection.estimatedDocumentCount();
+   const forums = await postCollection.estimatedDocumentCount();
+
+   res.send({
+      users,
+      subscribers,
+      forums,
+   })
+})
 
 
 app.get('/', (req, res) => {

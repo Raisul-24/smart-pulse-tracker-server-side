@@ -163,12 +163,43 @@ app.post('/trainers', async (req, res) => {
    const result = await trainerCollection.insertOne(trainer);
    res.send(result);
 });
+// get applied trainers
+app.get('/applyTrainers', verifyToken, verifyAdmin, async (req, res) => {
+   const result = await appliedTrainerCollection.find().toArray();
+   res.send(result);
+});
 // post applied trainer
 app.post('/applyTrainers', async (req, res) => {
    const trainer = req.body;
    const result = await appliedTrainerCollection.insertOne(trainer);
    res.send(result);
 });
+// confirm application
+app.patch('/applyTrainers/:id', async (req, res) => {
+   const id = req.params.id;
+   const status = req.body.status; 
+   console.log(status)
+   const filter = { _id: new ObjectId(id) }
+   const updatedDoc = {
+      $set: {
+         role: status
+      }
+   }
+   const result = await appliedTrainerCollection.updateOne(filter, updatedDoc);
+   res.send(result);
+   });
+// reject application
+app.patch('/applyTrainers/:id', async (req, res) => {
+   const id = req.params.id;
+   const filter = { _id: new ObjectId(id) }
+   const updatedDoc = {
+      $set: {
+         role: 'Rejected'
+      }
+   }
+   const result = await appliedTrainerCollection.updateOne(filter, updatedDoc);
+   res.send(result);
+   });
 // specific trainer
 app.get('/trainers/:id', async (req, res) => {
    const id = req.params.id;
